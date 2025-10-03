@@ -1,0 +1,189 @@
+<!--TravelMate — Personal Trip Planner-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TravelMate — Trip Planner </title>
+<style>
+  :root { --bg: #000000; --card:#ffffff; --accent:#3b82f6; --muted:#fffcfd; --radius:12px; --glass: rgba(0,0,0,0.03); }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:#ff0059;padding:20px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+  h1{margin:0;font-size:24px}
+  .btn{padding:8px 12px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer}
+  .container{max-width:1000px;margin:0 auto}
+  .form-group{margin-bottom:12px}
+  label{display:block;font-weight:600;margin-bottom:4px}
+  input,textarea,select{width:100%;padding:8px;border-radius:8px;border:1px solid var(--glass)}
+  textarea{resize:none}
+  .trip-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:16px}
+  .trip-card{background:var(--card);padding:14px;border-radius:var(--radius);border:1px solid var(--glass);box-shadow:0 4px 12px rgba(0,0,0,0.08);transition:transform .18s ease}
+  .trip-card:hover{transform:translateY(-4px)}
+  .tags{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
+  .tag{padding:4px 8px;border-radius:999px;background:var(--glass);font-size:12px;color:var(--muted)}
+  .search-sort{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  footer{margin-top:28px;text-align:center;color:var(--muted);font-size:13px}
+  .calendar{margin-top:20px;background:rgb(81, 98, 116);padding:12px;border-radius:12px;display:flex;flex-wrap:wrap;gap:8px;}
+  .day{flex:1 0 14%;padding:8px;border-radius:8px;border:1px solid var(--glass);min-height:60px;position:relative}
+  .day span{font-size:12px;font-weight:600}
+  .trip-indicator{position:absolute;bottom:4px;left:4px;font-size:10px;background:var(--accent);color:rgb(5, 4, 4);padding:2px 4px;border-radius:6px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>TravelMate</h1>
+    <button class="btn" id="addTripBtn">+ Add Trip</button>
+  </header>
+
+  <div class="search-sort">
+    <input type="text" id="searchInput" placeholder="Search trips by destination, notes..." style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--glass)">
+    <select id="filterType">
+      <option value="all">All Types</option>
+      <option value="Adventure">Adventure</option>
+      <option value="Leisure">Leisure</option>
+      <option value="Business">Business</option>
+    </select>
+    <select id="sortSelect">
+      <option value="upcoming">Upcoming First</option>
+      <option value="past">Past Trips</option>
+    </select>
+  </div>
+
+  <div class="trip-grid" id="tripGrid"></div>
+
+  <div class="calendar" id="calendar"></div>
+
+  <footer>© 2025 TravelMate — Plan your trips effortlessly</footer>
+</div>
+
+<template id="tripModalTemplate">
+  <div style="position:fixed;inset:0;background:rgba(23, 21, 22, 0.6);display:flex;align-items:center;justify-content:center;z-index:50">
+    <div style="background:white;padding:20px;border-radius:12px;width:90%;max-width:400px;position:relative">
+      <button id="closeModal" style="position:absolute;top:10px;right:10px;border:none;background:none;font-size:16px;cursor:pointer">✕</button>
+      <h2 style="margin-top:0">Add / Edit Trip</h2>
+      <form id="tripForm">
+        <div class="form-group"><label>Destination</label><input name="destination" type="text" required></div>
+        <div class="form-group"><label>Start Date</label><input name="start" type="date" required></div>
+        <div class="form-group"><label>End Date</label><input name="end" type="date" required></div>
+        <div class="form-group"><label>Type</label><select name="type" required><option value="Adventure">Adventure</option><option value="Leisure">Leisure</option><option value="Business">Business</option></select></div>
+        <div class="form-group"><label>Notes</label><textarea name="notes" rows="3"></textarea></div>
+        <div style="text-align:right;margin-top:10px"><button type="submit" class="btn">Save Trip</button></div>
+      </form>
+    </div>
+  </div>
+</template>
+
+<script>
+const tripGrid = document.getElementById('tripGrid');
+const addTripBtn = document.getElementById('addTripBtn');
+const searchInput = document.getElementById('searchInput');
+const filterType = document.getElementById('filterType');
+const sortSelect = document.getElementById('sortSelect');
+const calendar = document.getElementById('calendar');
+
+let trips = JSON.parse(localStorage.getItem('trips')||'[]');
+
+function renderTrips(){
+  let filtered = trips.filter(t=>{
+    const search = searchInput.value.toLowerCase();
+    const matchesSearch = t.destination.toLowerCase().includes(search) || t.notes.toLowerCase().includes(search);
+    const matchesType = filterType.value==='all' || t.type===filterType.value;
+    return matchesSearch && matchesType;
+  });
+  if(sortSelect.value==='upcoming'){ filtered.sort((a,b)=> new Date(a.start)-new Date(b.start)); }
+  else{ filtered.sort((a,b)=> new Date(b.start)-new Date(a.start)); }
+
+  tripGrid.innerHTML='';
+  if(filtered.length===0){ tripGrid.innerHTML='<div style="color:#64748b">No trips found.</div>'; return; }
+  filtered.forEach((t,i)=>{
+    const card = document.createElement('div'); card.className='trip-card';
+    card.innerHTML=`
+      <h3>${t.destination}</h3>
+      <div class="muted">${t.start} → ${t.end}</div>
+      <div class="tags"><span class="tag">${t.type}</span></div>
+      <p>${t.notes}</p>
+      <div style="text-align:right"><button class="btn" style="background:#ef4444" data-edit="${i}">Edit</button></div>
+    `;
+    tripGrid.appendChild(card);
+  });
+  renderCalendar();
+  checkNotifications();
+}
+
+function openTripModal(editIndex=null){
+  const tpl = document.getElementById('tripModalTemplate');
+  const clone = tpl.content.cloneNode(true);
+  document.body.appendChild(clone);
+  const backdrop = document.querySelector('div[style*="position:fixed"]');
+  const close = backdrop.querySelector('#closeModal');
+  const form = backdrop.querySelector('#tripForm');
+
+  if(editIndex!==null){
+    const t = trips[editIndex];
+    form.destination.value=t.destination;
+    form.start.value=t.start;
+    form.end.value=t.end;
+    form.type.value=t.type;
+    form.notes.value=t.notes;
+  }
+
+  close.addEventListener('click', ()=>backdrop.remove());
+  backdrop.addEventListener('click', (e)=>{if(e.target===backdrop) backdrop.remove();});
+
+  form.addEventListener('submit', e=>{
+    e.preventDefault();
+    const trip = {destination:form.destination.value,start:form.start.value,end:form.end.value,type:form.type.value,notes:form.notes.value};
+    if(editIndex!==null){ trips[editIndex]=trip; } else { trips.push(trip); }
+    localStorage.setItem('trips', JSON.stringify(trips));
+    renderTrips();
+    backdrop.remove();
+  });
+}
+
+function renderCalendar(){
+  calendar.innerHTML='';
+  const now = new Date();
+  const monthDays = new Date(now.getFullYear(), now.getMonth()+1,0).getDate();
+  for(let d=1;d<=monthDays;d++){
+    const dayDiv = document.createElement('div'); dayDiv.className='day';
+    dayDiv.innerHTML=`<span>${d}</span>`;
+    const dayDate = new Date(now.getFullYear(), now.getMonth(), d);
+    trips.forEach(t=>{
+      const start = new Date(t.start); const end = new Date(t.end);
+      if(dayDate>=start && dayDate<=end){
+        const indicator = document.createElement('div'); indicator.className='trip-indicator'; indicator.textContent=t.destination;
+        dayDiv.appendChild(indicator);
+      }
+    });
+    calendar.appendChild(dayDiv);
+  }
+}
+
+function checkNotifications(){
+  const today = new Date().toISOString().split('T')[0];
+  trips.forEach(t=>{
+    if(t.start===today){
+      if(!t.notified){
+        alert(`Reminder: Your trip to ${t.destination} starts today!`);
+        t.notified=true;
+      }
+    }
+  });
+  localStorage.setItem('trips', JSON.stringify(trips));
+}
+
+addTripBtn.addEventListener('click', ()=>openTripModal());
+tripGrid.addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-edit]');
+  if(btn){ openTripModal(parseInt(btn.dataset.edit)); }
+});
+searchInput.addEventListener('input', renderTrips);
+filterType.addEventListener('change', renderTrips);
+sortSelect.addEventListener('change', renderTrips);
+
+renderTrips();
+</script>
+</body>
+</html>
