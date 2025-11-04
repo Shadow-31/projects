@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>2048 Game </title>
+</head>
+<body style="background-color: rgba(218, 218, 218, 0.961)">
+    <h1 style="text-decoration: underline;"> 2048-Game</h1>
+    <br>
+
+    <div class="score-container">
+        <div>Score : <span id="current-score">0</span></div>
+        <div>High Score : <span id="high-score">0</span></div>
+    </div>
+    <div class="game-container">
+        <div class="grid">
+            <div class="cell" data-row="0" data-col="0"></div>
+            <div class="cell" data-row="0" data-col="1"></div>
+            <div class="cell" data-row="0" data-col="2"></div>
+            <div class="cell" data-row="0" data-col="3"></div>
+            <div class="cell" data-row="1" data-col="0"></div>
+            <div class="cell" data-row="1" data-col="1"></div>
+            <div class="cell" data-row="1" data-col="2"></div>
+            <div class="cell" data-row="1" data-col="3"></div>
+            <div class="cell" data-row="2" data-col="0"></div>
+            <div class="cell" data-row="2" data-col="1"></div>
+            <div class="cell" data-row="2" data-col="2"></div>
+            <div class="cell" data-row="2" data-col="3"></div>
+            <div class="cell" data-row="3" data-col="0"></div>
+            <div class="cell" data-row="3" data-col="1"></div>
+            <div class="cell" data-row="3" data-col="2"></div>
+            <div class="cell" data-row="3" data-col="3"></div>
+        </div>
+    </div>
+    <div id="game-over">
+        Game Over!
+        <button id="restart-btn">Restart Game</button>
+    </div>
+
+
+
+    <details>
+    <summary>HOW TO PLAY</summary>
+    <P>✅🎮  Swipe or use Arrow Keys (⬆️⬇️⬅️➡️) to move the tiles.</P>
+    <P>✅. 🔄 Merge two tiles with the same number into one.
+        <br>
+✅. 2+2=4, 16+16=32,  64+64=128, 128+128=256, 1024+1024=2048 
+
+</P>
+    <P>✅. 🏆 Join the tiles to reach 2048 and win!</P>
+</details>
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
+
